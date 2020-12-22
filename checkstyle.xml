@@ -1,8 +1,13 @@
 <?xml version="1.0"?>
-<!DOCTYPE module PUBLIC
-        "-//Puppy Crawl//DTD Check Configuration 1.3//EN"
-        "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
-
+<!DOCTYPE module [
+        <!ELEMENT module (property|module)*>
+        <!ATTLIST module
+                name CDATA #REQUIRED>
+        <!ELEMENT property (#PCDATA)>
+        <!ATTLIST property
+                name CDATA #REQUIRED
+                value CDATA #REQUIRED>
+        ]>
 <module name="Checker">
 
     <!--Расширение файла должно быть java, properties, xml-->
