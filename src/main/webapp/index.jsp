@@ -1,10 +1,12 @@
+
+<%@ page contentType="text/html; charset=UTF-8" %>
+<%@ page import="model.Store" %>
+<%@ page import="model.Post" %>
 <!doctype html>
 <html lang="en">
 <head>
     <!-- Required meta tags -->
-    <%@ page contentType="text/html; charset=UTF-8" %>
-    <%@ page import="model.Store" %>
-    <%@ page import="model.Post" %>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
@@ -22,20 +24,14 @@
 <body>
 <div class="container">
     <div class="row">
-        <table class="table">
-            <thead>
-            <tr>
-                <th scope="col">Объявления</th>
-            </tr>
-            </thead>
-            <tbody>
-            <% for (Post post : Store.instOf().findAll()) { %>
-            <tr>
-                <td><%= post.getName() %></td>
-            </tr>
-            <% } %>
-            </tbody>
-        </table>
+        <ul class="nav">
+            <li class="nav-item">
+                <a class="nav-link" href="<%=request.getContextPath()%>/posts.jsp">Вакансии</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="<%=request.getContextPath()%>/candidates.jsp">Кандидаты</a>
+            </li>
+        </ul>
     </div>
 </div>
 </body>
