@@ -45,7 +45,11 @@
                     <tbody>
                     <% for (Candidate can : Store.instOf().findAllCandidates()) { %>
                     <tr>
-                        <td><%= can.getName() %></td>
+                        <td>
+                        <a href="<%=request.getContextPath()%>/candidate/edit.jsp?id=<%=can.getId()%>">
+                            <i class="fa fa-edit mr-3"></i>
+                        </a>
+                        <%= can.getName() %></td>
                     </tr>
                     <% } %>
                     </tbody>
