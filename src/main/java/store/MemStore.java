@@ -1,13 +1,16 @@
-package model;
+package store;
+
+import model.Candidate;
+import model.Post;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Store {
+public class MemStore {
 
-    private static final Store INST = new Store();
+    private static final MemStore INST = new MemStore();
 
     private Map<Integer, Post> posts = new ConcurrentHashMap<>();
 
@@ -15,7 +18,7 @@ public class Store {
 
     private static AtomicInteger POST_ID = new AtomicInteger(4);
 
-    private Store() {
+    private MemStore() {
         posts.put(1, new Post(1, "Junior Java Job"));
         posts.put(2, new Post(2, "Middle Java Job"));
         posts.put(3, new Post(3, "Senior Java Job"));
@@ -24,7 +27,7 @@ public class Store {
         candidates.put(3, new Candidate(3, "Senior Java"));
     }
 
-    public static Store instOf() {
+    public static MemStore instOf() {
         return INST;
     }
 
