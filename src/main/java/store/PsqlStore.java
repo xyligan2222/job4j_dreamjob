@@ -72,12 +72,13 @@ public class PsqlStore implements StorePost, StoreCandidate {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            LOG.error("Неверный SQL запрос, Вакансии не найдены");
         }
         return posts;
     }
 
     @Override
-    public Collection<Candidate> findAllCandidates() {
+    public Collection<Candidate> findAllCandidates()  {
         List<Candidate> candidate = new ArrayList<>();
         try (Connection cn = pool.getConnection();
              PreparedStatement ps =  cn.prepareStatement("SELECT * FROM candidate")
@@ -86,15 +87,18 @@ public class PsqlStore implements StorePost, StoreCandidate {
                 while (it.next()) {
                     candidate.add(new Candidate(it.getInt("id"), it.getString("name")));
                 }
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, кандидаты не найдены");
         }
         return candidate;
     }
 
     @Override
-    public void saveCandidate(Candidate candidate) {
+    public void saveCandidate(Candidate candidate)  {
         if (candidate.getId() == 0)  {
             create(candidate);
         } else {
@@ -103,7 +107,7 @@ public class PsqlStore implements StorePost, StoreCandidate {
     }
 
     @Override
-    public Candidate findByIdCandidate(int id) throws SQLException {
+    public Candidate findByIdCandidate(int id)  {
         try (Connection cn = pool.getConnection();
              PreparedStatement ps = cn.prepareStatement("SELECT * FROM candidate WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS)
         ) {
@@ -117,11 +121,15 @@ public class PsqlStore implements StorePost, StoreCandidate {
                 LOG.error("Кандидат с указанным id не найден");
             }
             return null;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, Кандидат с указанным id не найден");
         }
+        return null;
     }
 
     @Override
-    public void savePost(Post post) {
+    public void savePost(Post post)  {
         if (post.getId() == 0) {
             create(post);
         } else {
@@ -129,7 +137,7 @@ public class PsqlStore implements StorePost, StoreCandidate {
         }
     }
 
-    private Post create(Post post) {
+    private Post create(Post post)  {
         try (Connection cn = pool.getConnection();
              PreparedStatement ps =  cn.prepareStatement("INSERT INTO post(name) VALUES (?)", PreparedStatement.RETURN_GENERATED_KEYS)
         ) {
@@ -140,13 +148,15 @@ public class PsqlStore implements StorePost, StoreCandidate {
                     post.setId(id.getInt(1));
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, указанная вакансия не была создана");
         }
+
         return post;
     }
 
-    private Candidate create(Candidate candidate) {
+    private Candidate create(Candidate candidate)  {
         try (Connection cn = pool.getConnection();
              PreparedStatement ps =  cn.prepareStatement("INSERT INTO candidate(name) VALUES (?) ", PreparedStatement.RETURN_GENERATED_KEYS)
         ) {
@@ -157,9 +167,12 @@ public class PsqlStore implements StorePost, StoreCandidate {
                     candidate.setId(id.getInt(1));
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, указанный кандидат не был создан");
+
         }
+
         return candidate;
     }
 
@@ -172,25 +185,28 @@ public class PsqlStore implements StorePost, StoreCandidate {
             ps.execute();
         } catch (Exception e) {
             e.printStackTrace();
+            LOG.error("Неверный SQL запрос, указанная вакансия не отредактирована");
         }
 
     }
 
-    private void update(Candidate candidate) {
+    private void update(Candidate candidate)  {
         try (Connection cn = pool.getConnection();
              PreparedStatement ps =  cn.prepareStatement("UPDATE candidate SET name = ? WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS)
         ) {
             ps.setString(1, candidate.getName());
             ps.setInt(2, candidate.getId());
             ps.execute();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, указанный кандидат не отредактирован");
         }
+
 
     }
 
     @Override
-    public Post findByIdPost(int id) throws SQLException {
+    public Post findByIdPost(int id)  {
         try (Connection cn = pool.getConnection();
              PreparedStatement ps =  cn.prepareStatement("SELECT * FROM post WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS)
         ) {
@@ -202,10 +218,12 @@ public class PsqlStore implements StorePost, StoreCandidate {
                return post;
            } else {
                LOG.error("Вакансия с указанным id не найдена");
+
            }
-
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, Вакансия с указанным id не найдена");
         }
-
         return null;
     }
 }

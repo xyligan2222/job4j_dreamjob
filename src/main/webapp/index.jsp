@@ -1,7 +1,6 @@
 
 <%@ page contentType="text/html; charset=UTF-8" %>
-<%@ page import="store.MemStore" %>
-<%@ page import="model.Post" %>
+
 <html lang="en">
 <head>
     <!-- Required meta tags -->

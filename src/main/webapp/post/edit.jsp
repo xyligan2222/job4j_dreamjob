@@ -6,8 +6,9 @@
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="store.MemStore" %>
+
 <%@ page import="model.Post" %>
+<%@ page import="store.PsqlStore" %>
 <!doctype html>
 <html lang="en">
 <head>
@@ -32,7 +33,7 @@
     String id = request.getParameter("id");
     Post post = new Post(0, "");
     if (id != null) {
-        post = MemStore.instOf().findById(Integer.valueOf(id));
+        post = PsqlStore.instOf().findByIdPost(Integer.valueOf(id));
     }
 %>
 <div class="container pt-3">

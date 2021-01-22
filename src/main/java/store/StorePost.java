@@ -11,5 +11,5 @@ public interface StorePost {
 
     void savePost(Post post);
 
-    Post findByIdPost(int id) throws SQLException;
+    Post findByIdPost(int id);
 }
