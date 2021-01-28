@@ -6,7 +6,8 @@
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-
+<%@ taglib prefix="c" uri="http://java.sun.com/jstl/core" %>
+<%@ page import="model.Photo" %>
 <%@ page import="model.Candidate" %>
 <%@ page import="store.PsqlStore" %>
 <!doctype html>
@@ -31,12 +32,34 @@
 <body>
 <%
     String id = request.getParameter("id");
+    String idPhoto = request.getParameter("photoId");
     Candidate candidate = new Candidate(0, "");
     if (id != null) {
-        candidate = PsqlStore.instOfCandidate().findByIdCandidate(Integer.valueOf(id));
+        candidate = PsqlStore.instOf().findByIdCandidate(Integer.valueOf(id));
+    }
+    Photo photo = new Photo(0, "");
+    if (idPhoto != null) {
+        photo = PsqlStore.instOf().findByIdPhoto(Integer.valueOf(idPhoto));
     }
 %>
 <div class="container pt-3">
+    <ul class="nav">
+        <li class="nav-item">
+            <a class="nav-link" href="<%=request.getContextPath()%>/index.jsp">Главная</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="<%=request.getContextPath()%>/posts.do">Вакансии</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="<%=request.getContextPath()%>/candidates.do">Кандидаты</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="<%=request.getContextPath()%>/post/edit.jsp">Добавить вакансию</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="<%=request.getContextPath()%>/candidate/edit.jsp">Добавить кандидата</a>
+        </li>
+    </ul>
     <div class="row">
         <div class="card" style="width: 100%">
             <div class="card-header">

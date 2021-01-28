@@ -12,4 +12,6 @@ public interface StoreCandidate {
     void saveCandidate(Candidate candidate);
 
     Candidate findByIdCandidate(int id);
+
+    boolean deleteCandidate (Candidate candidate);
 }
