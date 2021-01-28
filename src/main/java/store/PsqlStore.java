@@ -1,5 +1,6 @@
 package store;
 
+import model.Photo;
 import org.apache.commons.dbcp2.BasicDataSource;
 import model.Candidate;
 import model.Post;
@@ -13,12 +14,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
-public class PsqlStore implements StorePost, StoreCandidate {
+public class PsqlStore implements StorePost, StoreCandidate, StorePhoto {
 
     private final BasicDataSource pool = new BasicDataSource();
 
@@ -48,16 +46,14 @@ public class PsqlStore implements StorePost, StoreCandidate {
     }
 
     private static final class Lazy {
-        private static final StorePost INST = new PsqlStore();
-        private static final StoreCandidate INST2 = new PsqlStore();
+        private static final PsqlStore INST = new PsqlStore();
+
     }
 
-    public static StorePost instOf() {
+    public static PsqlStore instOf() {
         return Lazy.INST;
     }
-    public static StoreCandidate instOfCandidate() {
-        return Lazy.INST2;
-    }
+
 
     @Override
     public Collection<Post> findAllPosts() {
@@ -129,12 +125,69 @@ public class PsqlStore implements StorePost, StoreCandidate {
     }
 
     @Override
+    public Photo findByIdPhoto(int id) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("SELECT * FROM photo WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
+            ps.setInt(1, id);
+            ResultSet rslSet = ps.executeQuery();
+            if (rslSet.next()) {
+                String name = rslSet.getString("name");
+                Photo photo = new Photo(id, name);
+                return photo;
+            } else {
+                LOG.error("Фото с указанным id не найдено");
+            }
+            return null;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, Фото с указанным id не найдено");
+        }
+        return null;
+    }
+
+    @Override
+    public boolean deleteCandidate(Candidate candidate) {
+        if (candidate == null) {
+            LOG.error("Указанного кандидата не существует");
+            return  false;
+        }
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps =  cn.prepareStatement("DELETE from candidate WHERE name = (?)", PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
+            ps.setString(1, candidate.getName());
+            ps.execute();
+            try (ResultSet id = ps.getGeneratedKeys()) {
+                if (id.next()) {
+                    candidate.setId(id.getInt(1));
+                }
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, указанный кандидат не был удален");
+        }
+
+        return false;
+    }
+
+    @Override
     public void savePost(Post post)  {
         if (post.getId() == 0) {
             create(post);
         } else {
             update(post);
         }
+
+    }
+
+    @Override
+    public Photo savePhoto(Photo photo)  {
+        if (photo.getId() == 0) {
+            create(photo);
+        } else {
+            update(photo);
+        }
+    return  photo;
     }
 
     private Post create(Post post)  {
@@ -176,6 +229,26 @@ public class PsqlStore implements StorePost, StoreCandidate {
         return candidate;
     }
 
+    private Photo create(Photo photo)  {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps =  cn.prepareStatement("INSERT INTO photo (name) VALUES (?) ", PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
+            ps.setString(1, photo.getName());
+            ps.execute();
+            try (ResultSet id = ps.getGeneratedKeys()) {
+                if (id.next()) {
+                    photo.setId(id.getInt(1));
+                }
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, Фото не добавлено");
+
+        }
+
+        return photo;
+    }
+
     private void update(Post post) {
         try (Connection cn = pool.getConnection();
              PreparedStatement ps =  cn.prepareStatement("UPDATE post SET name = ? WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS)
@@ -201,7 +274,32 @@ public class PsqlStore implements StorePost, StoreCandidate {
             throwables.printStackTrace();
             LOG.error("Неверный SQL запрос, указанный кандидат не отредактирован");
         }
+    }
 
+    public void updateCandidateWithPhoto(Candidate candidate)  {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps =  cn.prepareStatement("UPDATE candidate SET photo_id = ? WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
+            ps.setInt(1, candidate.getPhoto_id());
+            ps.setInt(2, candidate.getId());
+            ps.execute();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, указанный кандидат не отредактирован");
+        }
+    }
+
+    private void update(Photo photo) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps =  cn.prepareStatement("UPDATE photo SET name = ? WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
+            ps.setString(1, photo.getName());
+            ps.setInt(2, photo.getId());
+            ps.execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+            LOG.error("Неверный SQL запрос, указанная фотогафия не отредактирована");
+        }
 
     }
 
@@ -226,4 +324,28 @@ public class PsqlStore implements StorePost, StoreCandidate {
         }
         return null;
     }
+
+    @Override
+    public Collection<Photo> findAllPhoto() {
+        List<Photo> photo = new ArrayList<>();
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps =  cn.prepareStatement("SELECT * FROM photo")
+        ) {
+            try (ResultSet it = ps.executeQuery()) {
+                while (it.next()) {
+                    photo.add(new Photo(it.getInt("id"), it.getString("name")));
+                }
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, фото не найдены");
+        }
+        return null;
+    }
+
+
+
+
 }

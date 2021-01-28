@@ -11,7 +11,7 @@ public class PsqlMain {
         //store.savePost(new Post(0, "Java Job"));
         //store.savePost(new Post(1, "Java got"));
 
-        StoreCandidate storeCandidate = PsqlStore.instOfCandidate();
+        StoreCandidate storeCandidate = PsqlStore.instOf();
         //storeCandidate.saveCandidate(new Candidate(1, "Андрей Широков"));
         storeCandidate.saveCandidate(new Candidate(1, "Вадик"));
         storeCandidate.saveCandidate(new Candidate(4, "Вадик"));

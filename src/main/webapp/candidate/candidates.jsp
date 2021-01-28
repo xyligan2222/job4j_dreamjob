@@ -39,6 +39,7 @@
                     <thead>
                     <tr>
                         <th scope="col">Названия</th>
+                        <th scope="col">Фото</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -50,6 +51,19 @@
                                 </a>
                                 <c:out value="${candidate.name}"/>
                             </td>
+                            <td>
+                                <img src="<c:url value='/download?name=${candidate.photo_id}'/>" width="100px" height="100px"/>
+                            </td>
+<%--                            <td><a href="<c:url value='/upload/uploadImage.jsp?candidateId=${candidate.id}'/>">Загрузить</a></td>--%>
+                            <td>
+                                <form action="<c:url value='/upload?candidateId=${candidate.id}'/>" method="post" enctype="multipart/form-data">
+                                    <div class="checkbox">
+                                    <input type="file" name="file">
+                                    </div>
+                                    <button type="submit" class="btn btn-default">Submit</button>
+                                </form>
+                           </td>
+                            <td><a href="<c:url value='/download?photoId=${candidate.photo_id}'/>">Download Photo</a></td>
                         </tr>
                     </c:forEach>
                     </tbody>

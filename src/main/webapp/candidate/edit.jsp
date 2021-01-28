@@ -33,7 +33,7 @@
     String id = request.getParameter("id");
     Candidate candidate = new Candidate(0, "");
     if (id != null) {
-        candidate = PsqlStore.instOfCandidate().findByIdCandidate(Integer.valueOf(id));
+        candidate = PsqlStore.instOf().findByIdCandidate(Integer.valueOf(id));
     }
 %>
 <div class="container pt-3">
