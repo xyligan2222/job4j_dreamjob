@@ -28,6 +28,10 @@
     <servlet-name>ImageServlet</servlet-name>
     <servlet-class>servlet.ImageServlet</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>AuthServlet</servlet-name>
+    <servlet-class>servlet.AuthServlet</servlet-class>
+  </servlet>
 
 
   <servlet-mapping>
@@ -53,5 +57,9 @@
   <servlet-mapping>
     <servlet-name>ImageServlet</servlet-name>
     <url-pattern>/image</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>AuthServlet</servlet-name>
+    <url-pattern>/auth.do</url-pattern>
   </servlet-mapping>
 </web-app>
