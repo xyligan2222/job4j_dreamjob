@@ -6,7 +6,7 @@
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-
+<%@ taglib prefix="c" uri="http://java.sun.com/jstl/core" %>
 <%@ page import="model.Post" %>
 <%@ page import="store.PsqlStore" %>
 <!doctype html>
@@ -52,6 +52,9 @@
         </li>
         <li class="nav-item">
             <a class="nav-link" href="<%=request.getContextPath()%>/candidate/edit.jsp">Добавить кандидата</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="<%=request.getContextPath()%>/login.jsp"> <c:out value="${user.name}"/> | Выйти</a>
         </li>
     </ul>
     <div class="row">
