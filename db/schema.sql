@@ -16,6 +16,12 @@ ALTER TABLE candidate ADD COLUMN photo_id int REFERENCES photo(id);
 ALTER TABLE candidate DROP COLUMN photo_id;
 ALTER TABLE candidate ADD COLUMN photo_id int REFERENCES photo(id) ON DELETE CASCADE;
 
+CREATE TABLE users (
+                           id SERIAL PRIMARY KEY,
+                           name TEXT,
+                           email TEXT,
+                           password TEXT
+);
 
 
 

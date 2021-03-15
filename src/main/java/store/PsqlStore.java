@@ -1,6 +1,7 @@
 package store;
 
 import model.Photo;
+import model.User;
 import org.apache.commons.dbcp2.BasicDataSource;
 import model.Candidate;
 import model.Post;
@@ -16,7 +17,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-public class PsqlStore implements StorePost, StoreCandidate, StorePhoto {
+public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUser {
 
     private final BasicDataSource pool = new BasicDataSource();
 
@@ -48,6 +49,7 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto {
         pool.setMaxIdle(10);
         pool.setMaxOpenPreparedStatements(100);
     }
+
 
     private static final class Lazy {
         private static final PsqlStore INST = new PsqlStore();
@@ -169,6 +171,32 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto {
         }
         return null;
     }
+    /*
+     table users
+     This method searches User by id
+     @return User if exists with this id
+      */
+
+    @Override
+    public User findUserById(int id) {
+        User user = null;
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("SELECT name FROM users WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
+            ps.setInt(1, id);
+            ResultSet resultSet = ps.executeQuery();
+            resultSet.next();
+            String name = resultSet.getString("name");
+            String email = resultSet.getString("email");
+            String password = resultSet.getString("password");
+            user = new User(id, name, email, password);
+            return user;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, Фото с указанным id не найдено");
+        }
+        return null;
+    }
 
     /*
      table candidate
@@ -218,6 +246,16 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto {
             update(photo);
         }
         return photo;
+    }
+
+    @Override
+    public void save(User user) {
+        if (user.getId() == 0) {
+            create(user);
+        } else {
+            update(user);
+        }
+
     }
 
     /*
@@ -295,6 +333,34 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto {
     }
 
     /*
+     table users
+     This method create Object user
+     @return user
+      */
+
+    private User create(User user) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement(
+                     "INSERT INTO users(name, email, password) VALUES (?, ?, ?) ",
+                     PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
+            ps.setString(1, user.getName());
+            ps.setString(2, user.getEmail());
+            ps.setString(3, user.getPassword());
+            ps.execute();
+            try (ResultSet id = ps.getGeneratedKeys()) {
+                if (id.next()) {
+                    user.setId(id.getInt(1));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return user;
+    }
+
+    /*
      table post
      This method update post if exist id
       */
@@ -327,6 +393,26 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
             LOG.error("Неверный SQL запрос, указанный кандидат не отредактирован");
+        }
+    }
+
+    /*
+     table users
+     This method update USERS if exist id
+      */
+
+    private void update(User user) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?")
+        ) {
+            ps.setString(1, user.getName());
+            ps.setString(2, user.getEmail());
+            ps.setString(3, user.getPassword());
+            ps.setInt(4, user.getId());
+            ps.execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+            LOG.error("Неверный SQL запрос, указанный пользователь не отредактирован");
         }
     }
 
@@ -402,5 +488,29 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto {
         }
         return null;
     }
+
+    @Override
+    public List<User> findAllUser() {
+        List<User> users = new ArrayList<>();
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("SELECT * FROM photo WHERE id = (?)")
+        ) {
+            try (ResultSet resultSet = ps.executeQuery()) {
+                while (resultSet.next()) {
+                    users.add(new User(
+                            resultSet.getInt("id"),
+                            resultSet.getString("name"),
+                            resultSet.getString("email"),
+                            resultSet.getString("password")
+                    ));
+                }
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, пользователи не найдены");
+        }
+        return users;
+    }
+
 
 }
