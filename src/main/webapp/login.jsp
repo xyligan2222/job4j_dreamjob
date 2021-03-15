@@ -25,8 +25,10 @@
 
     <div class="row">
         <div class="card" style="width: 100%">
+
             <div class="card-header">
                 Авторизация
+
             </div>
             <div class="card-body">
                 <form action="<%=request.getContextPath()%>/auth.do" method="post">
@@ -39,7 +41,8 @@
                         <input type="text" class="form-control" name="password">
                     </div>
                     <button type="submit" class="btn btn-primary">Войти</button>
-                </form>
+<%--                    <div>--%>
+                        <a class="btn btn-primary" href="<%=request.getContextPath()%>/reg.jsp">Регистрация</a>
             </div>
         </div>
     </div>

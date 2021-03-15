@@ -23,5 +23,7 @@ CREATE TABLE users (
                            password TEXT
 );
 
+ALTER TABLE users ADD UNIQUE (email);
+
 
 

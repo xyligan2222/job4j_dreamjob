@@ -193,10 +193,38 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUs
             return user;
         } catch (SQLException throwables) {
             throwables.printStackTrace();
-            LOG.error("Неверный SQL запрос, Фото с указанным id не найдено");
+            LOG.error("Неверный SQL запрос, Пользователь с указанным id не найден");
         }
         return null;
     }
+
+    @Override
+    public User findUserByEmail(String email) {
+        if ( email == null) {
+            LOG.info("Email не содержит символов");
+            return null;
+        }
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("SELECT * FROM users WHERE email = ?", PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
+            ps.setString(1, email);
+            ResultSet resultSet = ps.executeQuery();
+            resultSet.next();
+            int id = resultSet.getInt("id");
+            String name = resultSet.getString("name");
+            String emails = resultSet.getString("email");
+            String password = resultSet.getString("password");
+            User user = new User(id, name, emails, password);
+            System.out.println("hello" + user);
+            return user;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, Пользователь с указанным Email не найден");
+        }
+
+        return null;
+    }
+
 
     /*
      table candidate
