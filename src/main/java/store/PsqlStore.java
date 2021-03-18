@@ -209,6 +209,10 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUs
         ) {
             ps.setString(1, email);
             ResultSet resultSet = ps.executeQuery();
+            var result = ps.getResultSet();
+            if ( result == null) {
+                return null;
+            }
             resultSet.next();
             int id = resultSet.getInt("id");
             String name = resultSet.getString("name");
