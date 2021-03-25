@@ -19,12 +19,12 @@
                 type: 'GET',
                 crossDomain: true,
                 url: 'http://localhost:8080/job4j_dreamjob/greet',
-                data: 'name=' + $('#exampleInputEmail1').val(),
-                dataType: 'text'
+                data: { name : $('#exampleInputEmail1').val()},
+                dataType: 'json'
             }).done(function (data) {
                 let div = document.createElement("div");
                 document.getElementById("exampleInputEmail1").before(div);
-                document.getElementById("exampleInputEmail1").before(data);
+                document.getElementById("exampleInputEmail1").before(JSON.stringify(data));
             }).fail(function (err) {
                 alert(err);
             });
