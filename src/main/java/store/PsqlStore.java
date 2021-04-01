@@ -1,10 +1,7 @@
 package store;
 
-import model.Photo;
-import model.User;
+import model.*;
 import org.apache.commons.dbcp2.BasicDataSource;
-import model.Candidate;
-import model.Post;
 import org.apache.commons.logging.impl.Log4JLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUser {
+public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUser, StoreCity {
 
     private final BasicDataSource pool = new BasicDataSource();
 
@@ -49,7 +46,6 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUs
         pool.setMaxIdle(10);
         pool.setMaxOpenPreparedStatements(100);
     }
-
 
     private static final class Lazy {
         private static final PsqlStore INST = new PsqlStore();
@@ -97,7 +93,7 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUs
             try (ResultSet it = ps.executeQuery()) {
                 while (it.next()) {
                     candidate.add(new Candidate(it.getInt("id"), it.getString("name"),
-                            it.getInt("photo_id")));
+                            it.getInt("photo_id"), it.getInt("city_id")));
                 }
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
@@ -126,13 +122,14 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUs
     @Override
     public Candidate findByIdCandidate(int id) {
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("SELECT * FROM candidate WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS)
+             PreparedStatement ps = cn.prepareStatement("SELECT * FROM candidate as c left join city c2 on c2.id = c.city_id WHERE c.id = ?", PreparedStatement.RETURN_GENERATED_KEYS)
         ) {
             ps.setInt(1, id);
             ResultSet rslSet = ps.executeQuery();
             if (rslSet.next()) {
                 String name = rslSet.getString("name");
-                Candidate candidate = new Candidate(id, name);
+                int city = rslSet.getInt("city_id");
+                Candidate candidate = new Candidate(id, name, city);
                 return candidate;
             } else {
                 LOG.error("Кандидат с указанным id не найден");
@@ -200,7 +197,7 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUs
 
     @Override
     public User findUserByEmail(String email) {
-        if ( email == null) {
+        if ( email == null && !email.equals("")) {
             LOG.info("Email не содержит символов");
             return null;
         }
@@ -219,7 +216,6 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUs
             String emails = resultSet.getString("email");
             String password = resultSet.getString("password");
             User user = new User(id, name, emails, password);
-            System.out.println("hello" + user);
             return user;
         } catch (SQLException throwables) {
             throwables.printStackTrace();
@@ -287,7 +283,15 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUs
         } else {
             update(user);
         }
+    }
 
+    @Override
+    public void saveCity(City city) {
+        if (city.getId() == 0) {
+            create(city);
+        } else {
+            update(city);
+        }
     }
 
     /*
@@ -321,10 +325,13 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUs
      @return Candidate
       */
     private Candidate create(Candidate candidate) {
+        System.out.println("save" + candidate);
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("INSERT INTO candidate(name) VALUES (?) ", PreparedStatement.RETURN_GENERATED_KEYS)
+             PreparedStatement ps = cn.prepareStatement("INSERT INTO candidate(name, city_id) VALUES (?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)
         ) {
             ps.setString(1, candidate.getName());
+            //ps.setInt(2, 0);
+            ps.setInt(2, candidate.getCity_id());
             ps.execute();
             try (ResultSet id = ps.getGeneratedKeys()) {
                 if (id.next()) {
@@ -362,6 +369,30 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUs
 
         }
         return photo;
+    }
+    /*
+     table city
+     This method create Object city
+     @return city
+      */
+
+    private City create(City city) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("INSERT INTO city (name) VALUES (?) ", PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
+            ps.setString(1, city.getName());
+            ps.execute();
+            try (ResultSet id = ps.getGeneratedKeys()) {
+                if (id.next()) {
+                    city.setId(id.getInt(1));
+                }
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, Город не добавлен");
+
+        }
+        return city;
     }
 
     /*
@@ -417,10 +448,12 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUs
 
     private void update(Candidate candidate) {
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("UPDATE candidate SET name = ? WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS)
+             PreparedStatement ps = cn.prepareStatement("UPDATE candidate SET name = ?, city_id = ? WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS)
         ) {
             ps.setString(1, candidate.getName());
-            ps.setInt(2, candidate.getId());
+            ps.setInt(2, candidate.getCity_id());
+            ps.setInt(3, candidate.getId());
+
             ps.execute();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
@@ -464,6 +497,10 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUs
             LOG.error("Неверный SQL запрос, указанный кандидат не отредактирован");
         }
     }
+    /*
+     table photo
+     This method update Photo if exist id
+      */
 
     private void update(Photo photo) {
         try (Connection cn = pool.getConnection();
@@ -478,6 +515,29 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUs
         }
 
     }
+    /*
+     table city
+     This method update City if exist id
+      */
+
+    private void update(City city) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("UPDATE city SET name = ? WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
+            ps.setString(1, city.getName());
+            ps.setInt(2, city.getId());
+            ps.execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+            LOG.error("Неверный SQL запрос, указанный город не отредактирован");
+        }
+
+    }
+    /*
+     table post
+     This method search post by id
+     return post
+     */
 
     @Override
     public Post findByIdPost(int id) {
@@ -500,7 +560,89 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUs
         }
         return null;
     }
+    /*
+     table city
+     This method search city by id
+     return city
+     */
 
+    @Override
+    public City findCityById(int id) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("SELECT * FROM city WHERE id = ?", PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
+            ps.setInt(1, id);
+            ResultSet rslSet = ps.executeQuery();
+            if (rslSet.next()) {
+                String name = rslSet.getString("name");
+                City city = new City(id, name);
+                return city;
+            } else {
+                LOG.error("Город с указанным id не найден");
+            }
+            return null;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, Город с указанным id не найден");
+        }
+        return null;
+    }
+    /*
+     table city
+     This method search city by name
+     return city
+     */
+    @Override
+    public City findByNameCity(String name) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("SELECT * FROM city WHERE name = ?", PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
+            ps.setString(1, name);
+            ResultSet rslSet = ps.executeQuery();
+            if (rslSet.next()) {
+                int id = rslSet.getInt("id");
+                City city = new City(id, name);
+                return city;
+            } else {
+                LOG.error("Город с указанным названием не найден");
+            }
+            return null;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, Город с указанным названием не найден");
+        }
+        return null;
+    }
+    /*
+     table city
+     This method search all city
+     return Collection city
+     */
+
+    @Override
+    public Collection<City> findAllCity() {
+        List<City> city = new ArrayList<>();
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("SELECT * FROM city")
+        ) {
+            try (ResultSet it = ps.executeQuery()) {
+                while (it.next()) {
+                    city.add(new City(it.getInt("id"), it.getString("name")));
+                }
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            LOG.error("Неверный SQL запрос, города не найдены");
+        }
+        return city;
+    }
+    /*
+     table photo
+     This method search all photo
+     return Collection photo
+     */
     @Override
     public Collection<Photo> findAllPhoto() {
         List<Photo> photo = new ArrayList<>();
@@ -518,9 +660,13 @@ public class PsqlStore implements StorePost, StoreCandidate, StorePhoto, StoreUs
             throwables.printStackTrace();
             LOG.error("Неверный SQL запрос, фото не найдены");
         }
-        return null;
+        return photo;
     }
-
+    /*
+     table user
+     This method search all user
+     return Collection user
+     */
     @Override
     public List<User> findAllUser() {
         List<User> users = new ArrayList<>();

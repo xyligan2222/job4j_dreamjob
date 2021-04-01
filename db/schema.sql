@@ -25,5 +25,18 @@ CREATE TABLE users (
 
 ALTER TABLE users ADD UNIQUE (email);
 
+CREATE TABLE city (
+                       id SERIAL PRIMARY KEY,
+                       name TEXT
+);
+ALTER TABLE candidate ADD COLUMN city_id int REFERENCES city(id);
 
+
+DELETE FROM city where id > 50;
+DELETE FROM candidate where id > 30;
+INSERT INTO city (name) VALUES ('Стерлитамак');
+INSERT INTO city (name) VALUES ('Санкт-Петербург');
+INSERT INTO city (name) VALUES ('Москва');
+INSERT INTO city (name) VALUES ('Уфа');
+UPDATE candidate SET name = 'Вадим', city_id = 50  WHERE id = 55;
 

@@ -40,6 +40,10 @@
     <servlet-name>GreetingServlet</servlet-name>
     <servlet-class>servlet.GreetingServlet</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>CitiesServlet</servlet-name>
+    <servlet-class>servlet.CitiesServlet</servlet-class>
+  </servlet>
 
 
 
@@ -80,6 +84,10 @@
   <servlet-mapping>
     <servlet-name>GreetingServlet</servlet-name>
     <url-pattern>/greet</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>CitiesServlet</servlet-name>
+    <url-pattern>/city</url-pattern>
   </servlet-mapping>
 
   <filter>

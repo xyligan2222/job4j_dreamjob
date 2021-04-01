@@ -47,7 +47,7 @@
             <a class="nav-link" href="<%=request.getContextPath()%>/candidate/edit.jsp">Добавить кандидата</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="<%=request.getContextPath()%>/login.jsp"> <c:out value="${user.name}"/> | Выйти</a>
+            <a class="nav-link" href="<%=request.getContextPath()%>/login.jsp"> Выйти</a>
         </li>
     </ul>
     <div class="row">
@@ -59,7 +59,8 @@
                 <table class="table">
                     <thead>
                     <tr>
-                        <th scope="col">Названия</th>
+                        <th scope="col">ФИО Кандидата</th>
+                        <th scope="col">Город</th>
                         <th scope="col">Фото</th>
                     </tr>
                     </thead>
@@ -67,10 +68,18 @@
                     <c:forEach items="${candidates}" var="candidate">
                         <tr>
                             <td>
-                                <a href='<c:url value="/candidate/edit.jsp?id=${candidate.id}"/>'>
+                                <a href='<c:url value="/candidate/edit.jsp?id=${candidate.id}&cityId=${candidate.city_id}"/>'>
                                     <i class="fa fa-edit mr-3"></i>
                                 </a>
                                 <c:out value="${candidate.name}"/>
+                            </td>
+                            <td>
+                                <c:forEach items="${city}" var="cities">
+                                    <c:if test="${candidate.city_id eq (cities.id)}">
+                                        <c:out value="${cities.name}"/>
+                                    </c:if>
+
+                                </c:forEach>
                             </td>
                             <td>
                                 <img src="<c:url value='/download?photoId=${candidate.photo_id}'/>" width="100px" height="100px"/>
@@ -80,7 +89,6 @@
                                         <button type="submit" class="btn btn-primary">Добавить/Изменить фото</button>
                                     </form>
                                 </td>
-
                         </tr>
                     </c:forEach>
                     </tbody>
